@@ -1,0 +1,78 @@
+variables:
+- name: devVariableGroupId
+- name: qaVariableGroupId
+- name: prodVariableGroupId
+
+pr: none
+trigger:
+  branches:
+    include:
+    - setup
+    
+steps:
+# Specify python version if you have side-by-side versions
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+    architecture: 'x64'
+
+# Update pip to latest
+- bash: python -m pip install --upgrade pip
+  displayName: 'Upgrade pip'
+
+
+# Install Azure DevOps extension
+- bash: az extension add -n azure-devops
+  displayName: 'Install Azure DevOps extension'
+  
+
+# Dev
+- bash: az pipelines variable-group create --name vgroup-aml-devops-dev --org https://dev.azure.com/memasanz/ --project=MeganMasanzRepos --variables WORKSPACE_SVC_CONNECTION=mm-aml-dev-connection
+  displayName: 'Set Variable Group for dev'
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+  
+    
+- bash: echo "##vso[task.setvariable variable=devVariableGroupId]$(az pipelines variable-group list --group-name vgroup-aml-devops-dev --org https://dev.azure.com/memasanz/ --project=MeganMasanzRepos --query [].id -o tsv)"
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+  displayName: 'Get vgroup-aml-devops-dev variable group id'
+
+- bash: az pipelines variable-group variable list --group-id $(devVariableGroupId) --org https://dev.azure.com/memasanz/ --project=MeganMasanzRepos
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+  displayName: 'List variables in vgroup-aml-devops-dev variable group'
+  
+# QA
+- bash: az pipelines variable-group create --name vgroup-aml-devops-qa --org https://dev.azure.com/memasanz/ --project=MeganMasanzRepos --variables WORKSPACE_SVC_CONNECTION=mm-aml-qa-connection
+  displayName: 'Set Variable Group for qa'
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+  
+    
+- bash: echo "##vso[task.setvariable variable=qaVariableGroupId]$(az pipelines variable-group list --group-name vgroup-aml-devops-qa --org https://dev.azure.com/memasanz/ --project=MeganMasanzRepos --query [].id -o tsv)"
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+  displayName: 'Get vgroup-aml-devops-qa variable group id'
+
+- bash: az pipelines variable-group variable list --group-id $(qaVariableGroupId) --org https://dev.azure.com/memasanz/ --project=MeganMasanzRepos
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+  displayName: 'List variables in vgroup-aml-devops-qa variable group'
+  
+ #Prod
+- bash: az pipelines variable-group create --name vgroup-aml-devops-prod --org https://dev.azure.com/memasanz/ --project=MeganMasanzRepos --variables WORKSPACE_SVC_CONNECTION=mm-aml-prod-connection
+  displayName: 'Set Variable Group for prod'
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+    
+- bash: echo "##vso[task.setvariable variable=prodVariableGroupId]$(az pipelines variable-group list --group-name vgroup-aml-devops-prod --org https://dev.azure.com/memasanz/ --project=MeganMasanzRepos --query [].id -o tsv)"
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+  displayName: 'Get vgroup-aml-devops-prod variable group id'
+
+- bash: az pipelines variable-group variable list --group-id $(prodVariableGroupId)  --org https://dev.azure.com/memasanz/ --project=MeganMasanzRepos
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+  displayName: 'List variables in vgroup-aml-devops-prod variable group'
+  
